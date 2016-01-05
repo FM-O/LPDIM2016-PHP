@@ -1,0 +1,22 @@
+{
+  "name": "FM-O/LPDIM2016-PHP",
+  "description": "microframework",
+  "minimum-stability": "alpha",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "FM-O",
+      "email": "florian.michel69250@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "": "tests/"
+    }
+  }
+}
