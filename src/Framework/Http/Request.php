@@ -12,8 +12,13 @@ class Request
     const OPTIONS = 'OPTIONS';
     const HEAD = 'HEAD';
     const TRACE = 'TRACE';
+
     const HTTP = 'HTTP';
     const HTTPS = 'HTTPS';
+
+    const VERSION_1_0 = '1.0';
+    const VERSION_1_1 = '1.1';
+    const VERSION_2_0 = '2.0';
 
     private $method;
     private $scheme;
@@ -24,20 +29,20 @@ class Request
 
     /**
      * Request constructor.
-     * @param string $method        The HTTP verb
-     * @param string $path          The resource path on the server
-     * @param string $scheme        The protocole name (HTTP or HTTPS)
+     * @param string $method The HTTP verb
+     * @param string $path The resource path on the server
+     * @param string $scheme The protocole name (HTTP or HTTPS)
      * @param string $schemeVersion The scheme version (ie: 1.0, 1.1, or 2.0)
-     * @param array $headers        An associative array of headers
-     * @param string $body          The request content
+     * @param array $headers An associative array of headers
+     * @param string $body The request content
      */
     public function __construct($method, $path, $scheme, $schemeVersion, array $headers = [], $body = '')
     {
         $this->setMethod($method);
         $this->path = $path;
         $this->setScheme($scheme);
-        $this->schemeVersion = $schemeVersion;
-        $this->headers = $headers;
+        $this->setSchemeVersion($schemeVersion);
+        $this->setHeaders($headers);
         $this->body = $body;
     }
 
@@ -76,14 +81,27 @@ class Request
      */
     private function setScheme($scheme)
     {
-        $schemes = [ self::HTTP, self::HTTPS ];
-        if(!in_array($scheme, $schemes))
+        $schemes = [self::HTTP, self::HTTPS];
+        if (!in_array($scheme, $schemes))
             throw new \InvalidArgumentException(sprintf(
                 'Scheme %s is not supported and must be one of %s',
                 $scheme,
-                implode(', ' ,$schemes)
+                implode(', ', $schemes)
             ));
         $this->scheme = $scheme;
+    }
+
+    private function setSchemeVersion($schemeVersion)
+    {
+        $schemeVersions = [self::VERSION_1_0, self::VERSION_1_1, self::VERSION_2_0];
+        if (!in_array($schemeVersion, $schemeVersions)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Scheme version %s is not supported and must be one of %s.',
+                $schemeVersion,
+                implode(', ', $schemeVersions)
+            ));
+        }
+        $this->schemeVersion = $schemeVersion;
     }
 
     public function getScheme()
@@ -103,6 +121,27 @@ class Request
         return $this->path;
     }
 
+    /**
+     * @param array $headers
+     * @return array
+     */
+    private function setHeaders(array $headers)
+    {
+        foreach ($headers as $header => $value) {
+            $header = strtolower($header);
+            if (isset($this->headers[$header]))
+                throw new \RuntimeException(sprintf(
+                    'Header %s is already defined and cannot be set twice',
+                    $header
+                ));
+            $this->headers[$header] = $value;
+        }
+    }
+
+    public function getHeader($name) {
+        $name = strtolower($name);
+        return isset($this->headers[$name]) ? $this->headers[$name] : null;
+    }
 
     public function getHeaders()
     {
