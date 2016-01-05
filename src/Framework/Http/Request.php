@@ -33,20 +33,58 @@ class Request
      */
     public function __construct($method, $path, $scheme, $schemeVersion, array $headers = [], $body = '')
     {
-        $this->method = $method;
+        $this->setMethod($method);
         $this->path = $path;
-        $this->scheme = $scheme;
+        $this->setScheme($scheme);
         $this->schemeVersion = $schemeVersion;
         $this->headers = $headers;
         $this->body = $body;
     }
 
+    /**
+     * @param string $method
+     */
+    public function setMethod($method)
+    {
+        $methods = [
+            self::GET,
+            self::POST,
+            self::PUT,
+            self::DELETE,
+            self::PATCH,
+            self::OPTIONS,
+            self::HEAD,
+            self::TRACE,
+        ];
+
+        if (!in_array($method, $methods))
+            throw new \InvalidArgumentException(sprintf(
+                'Method %s is not supported and must be one of %s',
+                $method,
+                implode(', ', $methods)
+            ));
+        $this->method = $method;
+    }
 
     public function getMethod()
     {
         return $this->method;
     }
 
+    /**
+     * @param $scheme
+     */
+    private function setScheme($scheme)
+    {
+        $schemes = [ self::HTTP, self::HTTPS ];
+        if(!in_array($scheme, $schemes))
+            throw new \InvalidArgumentException(sprintf(
+                'Scheme %s is not supported and must be one of %s',
+                $scheme,
+                implode(', ' ,$schemes)
+            ));
+        $this->scheme = $scheme;
+    }
 
     public function getScheme()
     {
@@ -76,7 +114,4 @@ class Request
     {
         return $this->body;
     }
-
-
-
 }

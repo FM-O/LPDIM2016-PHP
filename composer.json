@@ -2,6 +2,7 @@
   "name": "FM-O/LPDIM2016-PHP",
   "description": "microframework",
   "minimum-stability": "alpha",
+  "type": "Library",
   "license": "proprietary",
   "authors": [
     {
