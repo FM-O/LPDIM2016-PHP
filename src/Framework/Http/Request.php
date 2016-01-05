@@ -128,13 +128,7 @@ class Request
     private function setHeaders(array $headers)
     {
         foreach ($headers as $header => $value) {
-            $header = strtolower($header);
-            if (isset($this->headers[$header]))
-                throw new \RuntimeException(sprintf(
-                    'Header %s is already defined and cannot be set twice',
-                    $header
-                ));
-            $this->headers[$header] = $value;
+            $this->addHeader($header, $value);
         }
     }
 
@@ -152,5 +146,22 @@ class Request
     public function getBody()
     {
         return $this->body;
+    }
+
+    /**
+     * Adds new normalized header value to the list of all headers
+     * @param string $header
+     * @param string $value
+     * @throws \RuntimeException
+     */
+    private function addHeader($header, $value)
+    {
+        $header = strtolower($header);
+        if (isset($this->headers[$header]))
+            throw new \RuntimeException(sprintf(
+                'Header %s is already defined and cannot be set twice',
+                $header
+            ));
+        $this->headers[$header] = $value;
     }
 }
