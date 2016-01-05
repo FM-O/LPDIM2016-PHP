@@ -1,11 +1,7 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: leosauvaget
- * Date: 05/01/2016
- * Time: 09:47
- */
+namespace Framework\Http;
+
 class Request
 {
     const GET = 'GET';

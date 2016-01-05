@@ -1,6 +1,8 @@
 <?php
 
-require_once __DIR__.'/../src/Request.php';
+namespace Tests\Framework\Http;
+
+use Framework\Http\Request;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
