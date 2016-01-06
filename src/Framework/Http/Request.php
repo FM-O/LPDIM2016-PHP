@@ -2,30 +2,10 @@
 
 namespace Framework\Http;
 
-class Request
+class Request extends AbstractMessage implements RequestInterface
 {
-    const GET = 'GET';
-    const POST = 'POST';
-    const PUT = 'PUT';
-    const DELETE = 'DELETE';
-    const PATCH = 'PATCH';
-    const OPTIONS = 'OPTIONS';
-    const HEAD = 'HEAD';
-    const TRACE = 'TRACE';
-
-    const HTTP = 'HTTP';
-    const HTTPS = 'HTTPS';
-
-    const VERSION_1_0 = '1.0';
-    const VERSION_1_1 = '1.1';
-    const VERSION_2_0 = '2.0';
-
     private $method;
-    private $scheme;
-    private $schemeVersion;
     private $path;
-    private $headers;
-    private $body;
 
     /**
      * Request constructor.
@@ -38,12 +18,41 @@ class Request
      */
     public function __construct($method, $path, $scheme, $schemeVersion, array $headers = [], $body = '')
     {
+        parent::__construct($scheme, $schemeVersion, $headers, $body);
+
         $this->setMethod($method);
         $this->path = $path;
-        $this->setScheme($scheme);
-        $this->setSchemeVersion($schemeVersion);
-        $this->setHeaders($headers);
-        $this->body = $body;
+    }
+
+    private static function parsePrologue($message)
+    {
+        $lines = explode("\n", $message);
+        $result = preg_match('#^(?P<method>[A-Z]{3,7}) (?P<path>.+) (?P<scheme>HTTPS?)\/(?P<version>[1-2]\.[0-2])$#', $lines[0], $matches);
+        if (!$result) {
+            throw new MalformedHttpMessageException($message, 'HTTP message prologue is malformed.');
+        }
+
+        return $matches;
+    }
+
+    public static function createFromMessage($message)
+    {
+        if (!is_string($message) || empty($message)) {
+            throw new MalformedHttpMessageException($message, 'HTTP message is not valid.');
+        }
+
+        // 1. Parse Prologue (first required line)
+        $prologue = self::parsePrologue($message);
+
+        // 4. Construct new instance of Request class with atomic data
+        return new self(
+            $prologue['method'],
+            $prologue['path'],
+            $prologue['scheme'],
+            $prologue['version'],
+            static::parseHeaders($message),
+            static::parseBody($message)
+        );
     }
 
     /**
@@ -76,92 +85,12 @@ class Request
         return $this->method;
     }
 
-    /**
-     * @param $scheme
-     */
-    private function setScheme($scheme)
-    {
-        $schemes = [self::HTTP, self::HTTPS];
-        if (!in_array($scheme, $schemes))
-            throw new \InvalidArgumentException(sprintf(
-                'Scheme %s is not supported and must be one of %s',
-                $scheme,
-                implode(', ', $schemes)
-            ));
-        $this->scheme = $scheme;
-    }
-
-    private function setSchemeVersion($schemeVersion)
-    {
-        $schemeVersions = [self::VERSION_1_0, self::VERSION_1_1, self::VERSION_2_0];
-        if (!in_array($schemeVersion, $schemeVersions)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Scheme version %s is not supported and must be one of %s.',
-                $schemeVersion,
-                implode(', ', $schemeVersions)
-            ));
-        }
-        $this->schemeVersion = $schemeVersion;
-    }
-
-    public function getScheme()
-    {
-        return $this->scheme;
-    }
-
-
-    public function getSchemeVersion()
-    {
-        return $this->schemeVersion;
-    }
-
-
     public function getPath()
     {
         return $this->path;
     }
 
-    /**
-     * @param array $headers
-     * @return array
-     */
-    private function setHeaders(array $headers)
-    {
-        foreach ($headers as $header => $value) {
-            $this->addHeader($header, $value);
-        }
-    }
-
-    public function getHeader($name) {
-        $name = strtolower($name);
-        return isset($this->headers[$name]) ? $this->headers[$name] : null;
-    }
-
-    public function getHeaders()
-    {
-        return $this->headers;
-    }
-
-
-    public function getBody()
-    {
-        return $this->body;
-    }
-
-    /**
-     * Adds new normalized header value to the list of all headers
-     * @param string $header
-     * @param string $value
-     * @throws \RuntimeException
-     */
-    private function addHeader($header, $value)
-    {
-        $header = strtolower($header);
-        if (isset($this->headers[$header]))
-            throw new \RuntimeException(sprintf(
-                'Header %s is already defined and cannot be set twice',
-                $header
-            ));
-        $this->headers[$header] = $value;
+    protected function createPrologue() {
+        return sprintf('%s %s %s/%s', $this->method, $this->path, $this->scheme, $this->schemeVersion);
     }
 }

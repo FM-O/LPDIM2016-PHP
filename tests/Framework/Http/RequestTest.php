@@ -6,6 +6,47 @@ use Framework\Http\Request;
 
 class RequestTest extends \PHPUnit_Framework_TestCase
 {
+    public function testCreateFromMessage()
+    {
+        $message = <<<MESSAGE
+GET /home HTTP/1.1
+host: http://wikipedia.com
+user-agent: Mozilla/Firefox
+content-type: application/json
+
+{ "foo": "bar" }
+MESSAGE;
+        $request = Request::createFromMessage($message);
+
+        $this->assertInstanceOf(Request::class, $request);
+        $this->assertSame($message, $request->getMessage());
+        $this->assertSame($message, (string) $request);
+    }
+
+    public function testGetMessage() {
+
+
+        $message = <<<MESSAGE
+GET /home HTTP/1.1
+host: http://wikipedia.com
+user-agent: Mozilla/Firefox
+content-type: application/json
+
+{ "foo": "bar" }
+MESSAGE;
+        $body = '{ "foo": "bar" }';
+        $headers = [
+            'Host' => 'http://wikipedia.com',
+            'User-Agent' => 'Mozilla/Firefox',
+            'Content-Type' => 'application/json',
+        ];
+
+        $request = new Request('GET', '/home', 'HTTP', '1.1', $headers, $body);
+
+        $this->assertSame($message, $request->getMessage());
+        $this->assertSame($message, (string) $request);
+    }
+
     /**
      * @expectedException \RuntimeException
      */
@@ -39,6 +80,7 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider provideValidHttpSchemeVersion
+     * @param string $version
      */
     public function testSupportedHttpSchemeVersion($version)
     {
@@ -122,14 +164,14 @@ class RequestTest extends \PHPUnit_Framework_TestCase
 
     public function providerRequestParameters() {
         return [
-            [request::GET, '/'],
-            [request::POST, '/home'],
-            [request::PUT, '/foo'],
-            [request::DELETE, '/bar'],
-            [request::PATCH, '/option'],
-            [request::OPTIONS, '/lol'],
-            [request::HEAD, '/contact'],
-            [request::TRACE, '/fr/article/42'],
+            [ request::GET, '/' ],
+            [ request::POST, '/home' ],
+            [ request::PUT, '/foo' ],
+            [ request::DELETE, '/bar' ],
+            [ request::PATCH, '/option' ],
+            [ request::OPTIONS, '/lol' ],
+            [ request::HEAD, '/contact' ],
+            [ request::TRACE, '/fr/article/42' ],
         ];
     }
 
